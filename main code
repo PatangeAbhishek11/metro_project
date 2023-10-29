@@ -1,0 +1,221 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QDateEdit, QStackedWidget, QMessageBox
+station_names = {
+    1: "PCMC",
+    2: "Sant Tukaram Nagar",
+    3: "Bhosari",
+    4: "Kasarwadi",
+    5: "Phugewadi",
+    6: "Dapodi",
+    7: "Bopodi",
+    8: "Khadki",
+    9: "Rangehill",
+    10: "Shivaji Nagar",
+    11: "Civil Court",
+    12: "Budhwar Peth",
+    13: "Mandai",
+    14: "Swargate"
+}
+
+# Fare matrix for different stations
+fare_matrix = [
+    [0.0, 10.50, 21.00, 21.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # PCMC
+    [10.50, 0.0, 17.50, 17.50, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Sant Tukaram Nagar
+    [21.00, 17.50, 0.0, 7.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Bhosari
+    [21.00, 17.50, 7.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Kasarwadi
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Phugewadi
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Dapodi
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Bopodi
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Khadki
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Rangehill
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Shivaji Nagar
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Civil Court
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Budhwar Peth
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Mandai
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # Swargate
+]
+
+class BookApp(QWidget):
+    button_style = "QPushButton { background-color: #3498db; color: white; border: none; padding: 10px; font-size: 16px; } QPushButton:hover { background-color: #2980b9; }"
+
+    def _init_(self):
+        super()._init_()
+        self.stacked_widget = QStackedWidget()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle("Pune Metro")
+        self.setGeometry(100, 100, 600, 400)
+
+        main_menu = QWidget()
+        main_layout = QVBoxLayout()
+
+        # Welcome Label
+        welcome_label = QLabel("Welcome to Pune Metro")
+        main_layout.addWidget(welcome_label)
+
+        # Stations Button
+        stations_button = QPushButton("Stations")
+        stations_button.setStyleSheet(self.button_style)
+        stations_button.clicked.connect(self.show_stations)
+        main_layout.addWidget(stations_button)
+
+        # Booking Button
+        booking_button = QPushButton("Booking")
+        booking_button.setStyleSheet(self.button_style)
+        booking_button.clicked.connect(self.show_booking)
+        main_layout.addWidget(booking_button)
+
+        # Timetable Button
+        timetable_button = QPushButton("Timetable")
+        timetable_button.setStyleSheet(self.button_style)
+        timetable_button.clicked.connect(self.show_timetable)
+        main_layout.addWidget(timetable_button)
+
+        # Contact Button
+        contact_button = QPushButton("Contact Us")
+        contact_button.setStyleSheet(self.button_style)
+        contact_button.clicked.connect(self.show_contact)
+        main_layout.addWidget(contact_button)
+
+        main_menu.setLayout(main_layout)
+        self.stacked_widget.addWidget(main_menu)
+
+        self.create_stations_page()
+        self.create_booking_page()
+        self.create_contact_page()
+        self.create_timetable_page()
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.stacked_widget)
+        self.setLayout(main_layout)
+
+    def create_stations_page(self):
+        layout = QVBoxLayout()
+
+        # Title Label for Stations
+        stations_title_label = QLabel("Stations")
+        layout.addWidget(stations_title_label)
+
+        # Create a list of stations
+        station_list = ["1. PCMC", "2. Sant Tukaram Nagar", "3. Bhosari", "4. Kasarwadi", "5. Phugewadi", "6. Dapodi", "7. Bopodi", "8. Khadki", "9. Rangehill", "10. Shivaji Nagar", "11. Civil Court", "12. Budhwar Peth", "13. Mandai", "14. Swargate"]
+
+        # Add station labels to the layout
+        for station in station_list:
+            station_label = QLabel(station)
+            layout.addWidget(station_label)
+
+        # Back to Home Button
+        back_button = QPushButton("Back to Home")
+        back_button.setStyleSheet(self.button_style)
+        back_button.clicked.connect(self.show_main_menu)
+        layout.addWidget(back_button)
+
+        stations_page = QWidget()
+        stations_page.setLayout(layout)
+        self.stacked_widget.addWidget(stations_page)
+
+    def create_booking_page(self):
+        layout = QVBoxLayout()
+        booking_label = QLabel("Booking Page")
+        layout.addWidget(booking_label)
+
+        # Booking Form
+        name_label = QLabel("Name:")
+        self.name_input = QLineEdit()
+        date_label = QLabel("Date:")
+        self.date_input = QDateEdit()
+        book_button = QPushButton("Book Now")
+        book_button.setStyleSheet(self.button_style)
+        book_button.clicked.connect(self.book_ticket)
+
+        layout.addWidget(name_label)
+        layout.addWidget(self.name_input)
+        layout.addWidget(date_label)
+        layout.addWidget(self.date_input)
+        layout.addWidget(book_button)
+
+        # Back to Home Button
+        back_button = QPushButton("Back to Home")
+        back_button.setStyleSheet(self.button_style)
+        back_button.clicked.connect(self.show_main_menu)
+        layout.addWidget(back_button)
+
+        booking_page = QWidget()
+        booking_page.setLayout(layout)
+        self.stacked_widget.addWidget(booking_page)
+
+    def create_contact_page(self):
+        layout = QVBoxLayout()
+        contact_label = QLabel("Contact Us Page")
+
+        # Contact Information
+        contact_info = QLabel("Contact Information:\nPhone: 123-456-7890\nEmail: punemetro@gmail.com")
+
+        layout.addWidget(contact_label)
+        layout.addWidget(contact_info)
+
+        # Back to Home Button
+        back_button = QPushButton("Back to Home")
+        back_button.setStyleSheet(self.button_style)
+        back_button.clicked.connect(self.show_main_menu)
+        layout.addWidget(back_button)
+
+        contact_page = QWidget()
+        contact_page.setLayout(layout)
+        self.stacked_widget.addWidget(contact_page)
+
+    def create_timetable_page(self):
+        layout = QVBoxLayout()
+        timetable_label = QLabel("Timetable Page")
+
+        # Timetable Information
+        timetable_info = QLabel("Timetable:\nMonday to Friday: 6:00 AM - 10:00 PM\nSaturday and Sunday: 8:00 AM - 8:00 PM")
+
+        layout.addWidget(timetable_label)
+        layout.addWidget(timetable_info)
+
+        # Back to Home Button
+        back_button = QPushButton("Back to Home")
+        back_button.setStyleSheet(self.button_style)
+        back_button.clicked.connect(self.show_main_menu)
+        layout.addWidget(back_button)
+
+        timetable_page = QWidget()
+        timetable_page.setLayout(layout)
+        self.stacked_widget.addWidget(timetable_page)
+
+    def show_main_menu(self):
+        self.stacked_widget.setCurrentIndex(0)
+
+    def show_stations(self):
+        self.stacked_widget.setCurrentIndex(1)
+
+    def show_booking(self):
+        self.stacked_widget.setCurrentIndex(2)
+
+    def show_contact(self):
+        self.stacked_widget.setCurrentIndex(3)
+
+    def show_timetable(self):
+        self.stacked_widget.setCurrentIndex(4)
+
+    def book_ticket(self):
+        # Get user input from the booking form
+        name = self.name_input.text()
+        date = self.date_input.date().toString("yyyy-MM-dd")
+
+        # Implement your booking logic here
+        if name and date:
+            # Perform booking logic here
+            # For now, let's just show a message box with the input data
+            booking_details = f"Booking details:\nName: {name}\nDate: {date}"
+            QMessageBox.information(self, "Booking Confirmation", booking_details)
+        else:
+            QMessageBox.warning(self, "Booking Error", "Please fill in all fields.")
+
+if _name_ == '_main_':
+    app = QApplication(sys.argv)
+    ex = BookApp()
+    ex.show()
+    sys.exit(app.exec_())
